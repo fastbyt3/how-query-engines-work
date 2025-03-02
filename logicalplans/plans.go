@@ -13,27 +13,31 @@ import (
 // Its the only logical plan that doesn't take an input logical plan
 // making it a leaf node in query tree
 type Scan struct {
-	Path       string
-	Datasource datasources.DataSource
-	Projection []string
+	Path        string
+	Datasource  datasources.DataSource
+	Projections []string
+}
+
+func NewScan(path string, datasource datasources.DataSource, projections []string) Scan {
+	return Scan{path, datasource, projections}
 }
 
 func (s *Scan) String() string {
-	if len(s.Projection) == 0 {
+	if len(s.Projections) == 0 {
 		return fmt.Sprintf("Scan: %s; path=None", s.Path)
 	}
-	return fmt.Sprintf("Scan: %s; path=%s", s.Path, s.Projection)
+	return fmt.Sprintf("Scan: %s; path=%s", s.Path, s.Projections)
 }
 
 func (s *Scan) deriveSchema() arrow.Schema {
 	schema := s.Datasource.Schema()
-	if len(s.Projection) == 0 {
+	if len(s.Projections) == 0 {
 		return schema
 	}
 
 	var fields []arrow.Field
 
-	for _, name := range s.Projection {
+	for _, name := range s.Projections {
 		for _, f := range schema.Fields() {
 			if name == f.Name {
 				fields = append(fields, f)
@@ -99,6 +103,10 @@ type Selection struct {
 	Expr  LogicalExpr
 }
 
+func NewSelection(input LogicalPlan, expr LogicalExpr) Selection {
+	return Selection{input, expr}
+}
+
 func (s *Selection) Children() []LogicalPlan {
 	return []LogicalPlan{s.Input}
 }
@@ -120,6 +128,10 @@ type Aggregate struct {
 	Input          LogicalPlan
 	GroupExprs     []LogicalExpr
 	AggregateExprs []AggregateExpr
+}
+
+func NewAggregate(input LogicalPlan, groupExpr []LogicalExpr, aggregateExpr []AggregateExpr) Aggregate {
+	return Aggregate{input, groupExpr, aggregateExpr}
 }
 
 func (a *Aggregate) Children() []LogicalPlan {
