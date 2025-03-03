@@ -68,8 +68,8 @@ type Projection struct {
 	Exprs []LogicalExpr
 }
 
-func NewProjection(input LogicalPlan, exprs []LogicalExpr) Projection {
-	return Projection{input, exprs}
+func NewProjection(input LogicalPlan, exprs []LogicalExpr) *Projection {
+	return &Projection{input, exprs}
 }
 
 func (p *Projection) Children() []LogicalPlan {
@@ -103,8 +103,8 @@ type Selection struct {
 	Expr  LogicalExpr
 }
 
-func NewSelection(input LogicalPlan, expr LogicalExpr) Selection {
-	return Selection{input, expr}
+func NewSelection(input LogicalPlan, expr LogicalExpr) *Selection {
+	return &Selection{input, expr}
 }
 
 func (s *Selection) Children() []LogicalPlan {
@@ -130,8 +130,8 @@ type Aggregate struct {
 	AggregateExprs []AggregateExpr
 }
 
-func NewAggregate(input LogicalPlan, groupExpr []LogicalExpr, aggregateExpr []AggregateExpr) Aggregate {
-	return Aggregate{input, groupExpr, aggregateExpr}
+func NewAggregate(input LogicalPlan, groupExpr []LogicalExpr, aggregateExpr []AggregateExpr) *Aggregate {
+	return &Aggregate{input, groupExpr, aggregateExpr}
 }
 
 func (a *Aggregate) Children() []LogicalPlan {
