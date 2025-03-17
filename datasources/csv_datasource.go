@@ -25,8 +25,6 @@ type CSVDatasource struct {
 	pjSchema  datatypes.Schema
 	pjIndices []int
 	builders  []datatypes.ArrowArrayBuilder
-
-	cursorBatchBuf [][]string
 }
 
 func NewCSVDatasource(filename string, batchSize int) *CSVDatasource {
@@ -48,10 +46,10 @@ func NewCSVDatasource(filename string, batchSize int) *CSVDatasource {
 func (c *CSVDatasource) Scan(projection []string) iter.Seq[datatypes.RecordBatch] {
 	slog.Info(fmt.Sprintf("scan() projection=%v", projection))
 	c.inferProjection(projection)
-	return c.createBatch(c.pjSchema, c.pjIndices, c.cursorBatchBuf)
+	return c.createBatch(c.pjSchema, c.pjIndices)
 }
 
-func (c *CSVDatasource) createBatch(readSchema datatypes.Schema, readIndices []int, batchBuf [][]string) iter.Seq[datatypes.RecordBatch] {
+func (c *CSVDatasource) createBatch(readSchema datatypes.Schema, readIndices []int) iter.Seq[datatypes.RecordBatch] {
 	return func(yield func(datatypes.RecordBatch) bool) {
 		rowsParsed := 0
 
@@ -61,15 +59,16 @@ func (c *CSVDatasource) createBatch(readSchema datatypes.Schema, readIndices []i
 				panic(fmt.Sprintf("unexpected error parsing csv, error = %v", err))
 			}
 
+			// build only for the projected schema
 			for j := range readIndices {
 				c.builders[j].Append(row[readIndices[j]])
 			}
 
 			fields := make([]datatypes.ColumnArray, len(readSchema.Fields()))
+			for _, i := range readIndices {
+				fields[i] = c.builders[i].Build()
+			}
 			rb := datatypes.NewRecordBatch(readSchema, fields)
-			// for _, i := range readIndices {
-			// 	fields[i] = c.builders[i]
-			// }
 
 			rowsParsed += 1
 			if (err == io.EOF || rowsParsed == c.batchSize) && !yield(*rb) {
