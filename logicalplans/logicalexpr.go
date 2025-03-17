@@ -35,7 +35,7 @@ func (c *Column) String() string {
 	return c.Name
 }
 
-// Literal Expressions
+// =================== Literal Expressions
 
 // LiteralString represents a string val
 type LiteralString struct {
@@ -95,7 +95,7 @@ func (e *LiteralFloat) String() string {
 	return fmt.Sprintf("%g", e.N)
 }
 
-// Binary Expressions
+// ================== Binary Expressions
 
 type BinaryExpr struct {
 	name string
@@ -153,13 +153,12 @@ func NewOrExpr(l, r LogicalExpr) BooleanBinaryExpr {
 	return BooleanBinaryExpr{BinaryExpr{"or", "OR", l, r}}
 }
 
-// Math expressions
+// ================== Math expressions
 
 type MathExpr struct {
 	BinaryExpr
 }
 
-// ToField implements LogicalExpr.
 func (m *MathExpr) ToField(input LogicalPlan) arrow.Field {
 	return arrow.Field{
 		Name: m.name,
@@ -170,12 +169,7 @@ func (m *MathExpr) ToField(input LogicalPlan) arrow.Field {
 var _ LogicalExpr = (*MathExpr)(nil)
 
 func NewAdd(l, r LogicalExpr) MathExpr {
-	return MathExpr{BinaryExpr{
-		name: "add",
-		op:   "+",
-		l:    l,
-		r:    r,
-	}}
+	return MathExpr{BinaryExpr{"add", "+", l, r}}
 }
 
 func NewSub(l, r LogicalExpr) MathExpr {
@@ -194,7 +188,7 @@ func NewMod(l, r LogicalExpr) MathExpr {
 	return MathExpr{BinaryExpr{"mod", "%", l, r}}
 }
 
-// Aggregate expressions
+// ================= Aggregate expressions
 
 type AggregateExpr struct {
 	name string
@@ -234,6 +228,7 @@ type AggregateCountExpr struct {
 	AggregateExpr
 }
 
+// COUNT expression always returns an int64 datatype field
 func (a *AggregateCountExpr) ToField(_ LogicalPlan) arrow.Field {
 	return arrow.Field{Name: "COUNT", Type: datatypes.Int64Type}
 }

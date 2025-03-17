@@ -1,7 +1,7 @@
 package logicalplans
 
 import (
-	"github.com/apache/arrow-go/v18/arrow"
+	"github.com/fastbyt3/query-engine/datatypes"
 )
 
 type Dataframe interface {
@@ -15,7 +15,7 @@ type Dataframe interface {
 	Aggregate(groupBy []LogicalExpr, aggregateExpr []AggregateExpr) Dataframe
 
 	// Schema of data produced by this Dataframe
-	Schema() arrow.Schema
+	Schema() datatypes.Schema
 
 	// Get logical plan for dataframe
 	LogicalPlan() LogicalPlan
@@ -23,6 +23,10 @@ type Dataframe interface {
 
 type DefaultDataframe struct {
 	plan LogicalPlan
+}
+
+func NewDefaultDataframe(plan LogicalPlan) *DefaultDataframe {
+	return &DefaultDataframe{plan}
 }
 
 func (d DefaultDataframe) Aggregate(groupBy []LogicalExpr, aggregateExpr []AggregateExpr) Dataframe {
@@ -41,7 +45,7 @@ func (d DefaultDataframe) Project(expr []LogicalExpr) Dataframe {
 	return DefaultDataframe{NewProjection(d.plan, expr)}
 }
 
-func (d DefaultDataframe) Schema() arrow.Schema {
+func (d DefaultDataframe) Schema() datatypes.Schema {
 	return d.plan.Schema()
 }
 

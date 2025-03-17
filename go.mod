@@ -7,6 +7,8 @@ require github.com/apache/arrow-go/v18 v18.1.0
 require (
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/google/flatbuffers v24.12.23+incompatible // indirect
+	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
+	github.com/zeebo/xxh3 v1.0.2 // indirect
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect

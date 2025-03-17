@@ -3,12 +3,11 @@ package datasources
 import (
 	"iter"
 
-	"github.com/apache/arrow-go/v18/arrow"
 	"github.com/fastbyt3/query-engine/datatypes"
 )
 
 type DataSource interface {
-	Schema() arrow.Schema
+	Schema() datatypes.Schema
 	Scan(projection []string) iter.Seq[datatypes.RecordBatch]
 }
 

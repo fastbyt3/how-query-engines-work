@@ -6,6 +6,7 @@ import (
 
 	"github.com/apache/arrow-go/v18/arrow"
 	"github.com/fastbyt3/query-engine/datasources"
+	"github.com/fastbyt3/query-engine/datatypes"
 )
 
 // Scan is for fetching data from a datasource.
@@ -29,30 +30,17 @@ func (s *Scan) String() string {
 	return fmt.Sprintf("Scan: %s; path=%s", s.Path, s.Projections)
 }
 
-func (s *Scan) deriveSchema() arrow.Schema {
+func (s *Scan) deriveSchema() datatypes.Schema {
 	schema := s.Datasource.Schema()
-	if len(s.Projections) == 0 {
-		return schema
-	}
-
-	var fields []arrow.Field
-
-	for _, name := range s.Projections {
-		for _, f := range schema.Fields() {
-			if name == f.Name {
-				fields = append(fields, f)
-			}
-		}
-	}
-
-	return *arrow.NewSchema(fields, nil)
+	projectedSchema, _ := schema.Select(s.Projections)
+	return projectedSchema
 }
 
 func (s *Scan) Children() []LogicalPlan {
 	return []LogicalPlan{}
 }
 
-func (s *Scan) Schema() arrow.Schema {
+func (s *Scan) Schema() datatypes.Schema {
 	return s.deriveSchema()
 }
 
@@ -76,12 +64,12 @@ func (p *Projection) Children() []LogicalPlan {
 	return []LogicalPlan{p.Input}
 }
 
-func (p *Projection) Schema() arrow.Schema {
+func (p *Projection) Schema() datatypes.Schema {
 	var fields []arrow.Field
 	for _, e := range p.Exprs {
 		fields = append(fields, e.ToField(p.Input))
 	}
-	return *arrow.NewSchema(fields, nil)
+	return *datatypes.NewSchema(fields)
 }
 
 // String implements LogicalPlan.
@@ -111,7 +99,7 @@ func (s *Selection) Children() []LogicalPlan {
 	return []LogicalPlan{s.Input}
 }
 
-func (s *Selection) Schema() arrow.Schema {
+func (s *Selection) Schema() datatypes.Schema {
 	return s.Input.Schema()
 }
 
@@ -138,7 +126,7 @@ func (a *Aggregate) Children() []LogicalPlan {
 	return []LogicalPlan{a.Input}
 }
 
-func (a *Aggregate) Schema() arrow.Schema {
+func (a *Aggregate) Schema() datatypes.Schema {
 	fields := make([]arrow.Field, len(a.AggregateExprs)+len(a.GroupExprs))
 
 	for i, e := range a.GroupExprs {
@@ -151,7 +139,7 @@ func (a *Aggregate) Schema() arrow.Schema {
 		j++
 	}
 
-	return *arrow.NewSchema(fields, nil)
+	return *datatypes.NewSchema(fields)
 }
 
 func (a *Aggregate) String() string {

@@ -2,30 +2,92 @@ package datatypes
 
 import (
 	"github.com/apache/arrow-go/v18/arrow"
+	"github.com/apache/arrow-go/v18/arrow/array"
 )
 
-// Instead of working with `FieldVector` directly we use `ColumnVector`
-type ColumnVector interface {
-	GetData() arrow.DataType
-	GetValue(i int) interface{}
+type ColumnArray interface {
+	GetType() arrow.DataType
+	GetValue(i int) any
 	Size() int
 }
 
-type LiteralValueVector struct {
+// LiteralValueArray represents a column where each entry is the same literal value.
+type LiteralValueArray struct {
 	arrowType arrow.DataType
-	value     interface{}
-	size      int
+	value     any
+	arraySize int
 }
 
-func (v *LiteralValueVector) GetData() (_ arrow.DataType) {
-	return v.arrowType
+func (l LiteralValueArray) GetType() arrow.DataType {
+	return l.arrowType
 }
-func (v *LiteralValueVector) GetValue(i int) (_ interface{}) {
-	if i < 0 || i >= v.size {
+
+func (l LiteralValueArray) GetValue(i int) any {
+	if i < 0 || i >= l.arraySize {
 		panic("index out of bounds")
 	}
-	return v.value
+	return l.value
 }
-func (v *LiteralValueVector) Size() (_ int) {
-	return v.size
+
+func (l LiteralValueArray) Size() int {
+	return l.arraySize
 }
+
+func NewLiteralValueArray(arrowType arrow.DataType, value any, arraySize int) LiteralValueArray {
+	return LiteralValueArray{arrowType, value, arraySize}
+}
+
+var _ ColumnArray = (*LiteralValueArray)(nil)
+
+// ArrowFieldArray wraps an Arrow array.Array to implement the ColumnArray interface.
+type ArrowFieldArray struct {
+	fieldArray arrow.Array
+}
+
+func NewArrowFieldArray(fieldArray arrow.Array) *ArrowFieldArray {
+	return &ArrowFieldArray{fieldArray}
+}
+
+func (a *ArrowFieldArray) GetType() arrow.DataType {
+	return a.fieldArray.DataType()
+}
+
+func (a *ArrowFieldArray) GetValue(i int) any {
+	if a.fieldArray.IsNull(i) {
+		return nil
+	}
+	switch v := a.fieldArray.(type) {
+	case *array.Boolean:
+		return v.Value(i)
+	case *array.Int8:
+		return v.Value(i)
+	case *array.Int16:
+		return v.Value(i)
+	case *array.Int32:
+		return v.Value(i)
+	case *array.Int64:
+		return v.Value(i)
+	case *array.Uint8:
+		return v.Value(i)
+	case *array.Uint16:
+		return v.Value(i)
+	case *array.Uint32:
+		return v.Value(i)
+	case *array.Uint64:
+		return v.Value(i)
+	case *array.Float32:
+		return v.Value(i)
+	case *array.Float64:
+		return v.Value(i)
+	case *array.String:
+		return v.Value(i)
+	default:
+		panic("unsupported fieldArray type")
+	}
+}
+
+func (a *ArrowFieldArray) Size() int {
+	return a.fieldArray.Len()
+}
+
+var _ ColumnArray = (*ArrowFieldArray)(nil)

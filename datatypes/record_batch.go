@@ -1,11 +1,16 @@
 package datatypes
 
-import "github.com/apache/arrow-go/v18/arrow"
-
 // Record Batch represents a bunch of columnar data
 type RecordBatch struct {
-	schema arrow.Schema
-	fields []ColumnVector
+	schema Schema
+	fields []ColumnArray
+}
+
+func NewRecordBatch(schema Schema, fields []ColumnArray) *RecordBatch {
+	return &RecordBatch{
+		schema: schema,
+		fields: fields,
+	}
 }
 
 func (rb *RecordBatch) RowCount() int {
@@ -16,6 +21,6 @@ func (rb *RecordBatch) ColumnCount() int {
 	return len(rb.fields)
 }
 
-func (rb *RecordBatch) Field(i int) ColumnVector {
+func (rb *RecordBatch) Field(i int) ColumnArray {
 	return rb.fields[i]
 }
