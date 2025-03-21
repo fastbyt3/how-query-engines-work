@@ -46,36 +46,45 @@ func NewCSVDatasource(filename string, batchSize int) *CSVDatasource {
 func (c *CSVDatasource) Scan(projection []string) iter.Seq[datatypes.RecordBatch] {
 	slog.Info(fmt.Sprintf("scan() projection=%v", projection))
 	c.inferProjection(projection)
-	return c.createBatch(c.pjSchema, c.pjIndices)
-}
-
-func (c *CSVDatasource) createBatch(readSchema datatypes.Schema, readIndices []int) iter.Seq[datatypes.RecordBatch] {
 	return func(yield func(datatypes.RecordBatch) bool) {
 		rowsParsed := 0
-
 		for {
+			slog.Info("createBatch: rows parsed so far", "count", rowsParsed)
 			row, err := c.reader.Read()
-			if err != nil && !errors.Is(err, io.EOF) {
-				panic(fmt.Sprintf("unexpected error parsing csv, error = %v", err))
+
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					if !yield(c.createBatch()) {
+						return
+					}
+				} else {
+					slog.Error("Unexpected error parsing file", "err", err)
+					panic("unexpected error parsing file")
+				}
 			}
 
-			// build only for the projected schema
-			for j := range readIndices {
-				c.builders[j].Append(row[readIndices[j]])
+			slog.Info("Row content", "value", row)
+			for i := range c.pjIndices {
+				c.builders[i].Append(row[c.pjIndices[i]])
 			}
-
-			fields := make([]datatypes.ColumnArray, len(readSchema.Fields()))
-			for _, i := range readIndices {
-				fields[i] = c.builders[i].Build()
-			}
-			rb := datatypes.NewRecordBatch(readSchema, fields)
-
 			rowsParsed += 1
-			if (err == io.EOF || rowsParsed == c.batchSize) && !yield(*rb) {
-				return
+
+			if rowsParsed == c.batchSize {
+				if !yield(c.createBatch()) {
+					return
+				}
 			}
 		}
 	}
+}
+
+func (c *CSVDatasource) createBatch() datatypes.RecordBatch {
+	fields := make([]datatypes.ColumnArray, len(c.pjSchema.Fields()))
+	for _, i := range c.pjIndices {
+		fields[i] = c.builders[i].Build()
+	}
+
+	return *datatypes.NewRecordBatch(c.pjSchema, fields)
 }
 
 func (c *CSVDatasource) inferProjection(projection []string) {
