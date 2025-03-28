@@ -12,15 +12,23 @@ type LogicalPlan interface {
 	String() string
 }
 
-func Pprint(lp LogicalPlan, indent int) string {
+func PprintPlan(lp LogicalPlan, spaces int) string {
+	return format(lp, spaces, 0)
+}
+
+func format(lp LogicalPlan, spaces, indentLevel int) string {
 	str := ""
+
+	for range indentLevel {
+		for range spaces {
+			str += " "
+		}
+	}
+
 	str += fmt.Sprintf("%s\n", lp)
 
 	for _, child := range lp.Children() {
-		for i := 0; i < indent; i++ {
-			str += " "
-		}
-		str += Pprint(child, indent)
+		str += format(child, spaces, indentLevel+1)
 	}
 
 	return str

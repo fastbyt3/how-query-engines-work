@@ -23,7 +23,7 @@ func NewScan(path string, datasource datasources.DataSource, projections []strin
 	return Scan{path, datasource, projections}
 }
 
-func (s *Scan) String() string {
+func (s Scan) String() string {
 	if len(s.Projections) == 0 {
 		return fmt.Sprintf("Scan: %s; path=None", s.Path)
 	}
@@ -36,11 +36,11 @@ func (s *Scan) deriveSchema() datatypes.Schema {
 	return projectedSchema
 }
 
-func (s *Scan) Children() []LogicalPlan {
+func (s Scan) Children() []LogicalPlan {
 	return []LogicalPlan{}
 }
 
-func (s *Scan) Schema() datatypes.Schema {
+func (s Scan) Schema() datatypes.Schema {
 	return s.deriveSchema()
 }
 
@@ -60,11 +60,11 @@ func NewProjection(input LogicalPlan, exprs []LogicalExpr) *Projection {
 	return &Projection{input, exprs}
 }
 
-func (p *Projection) Children() []LogicalPlan {
+func (p Projection) Children() []LogicalPlan {
 	return []LogicalPlan{p.Input}
 }
 
-func (p *Projection) Schema() datatypes.Schema {
+func (p Projection) Schema() datatypes.Schema {
 	var fields []arrow.Field
 	for _, e := range p.Exprs {
 		fields = append(fields, e.ToField(p.Input))
@@ -73,7 +73,7 @@ func (p *Projection) Schema() datatypes.Schema {
 }
 
 // String implements LogicalPlan.
-func (p *Projection) String() string {
+func (p Projection) String() string {
 	s := make([]string, len(p.Exprs))
 	for i, e := range p.Exprs {
 		s[i] = e.String()
@@ -95,15 +95,15 @@ func NewSelection(input LogicalPlan, expr LogicalExpr) *Selection {
 	return &Selection{input, expr}
 }
 
-func (s *Selection) Children() []LogicalPlan {
+func (s Selection) Children() []LogicalPlan {
 	return []LogicalPlan{s.Input}
 }
 
-func (s *Selection) Schema() datatypes.Schema {
+func (s Selection) Schema() datatypes.Schema {
 	return s.Input.Schema()
 }
 
-func (s *Selection) String() string {
+func (s Selection) String() string {
 	return fmt.Sprintf("Filter: %s", s.Expr)
 }
 
@@ -122,11 +122,11 @@ func NewAggregate(input LogicalPlan, groupExpr []LogicalExpr, aggregateExpr []Ag
 	return &Aggregate{input, groupExpr, aggregateExpr}
 }
 
-func (a *Aggregate) Children() []LogicalPlan {
+func (a Aggregate) Children() []LogicalPlan {
 	return []LogicalPlan{a.Input}
 }
 
-func (a *Aggregate) Schema() datatypes.Schema {
+func (a Aggregate) Schema() datatypes.Schema {
 	fields := make([]arrow.Field, len(a.AggregateExprs)+len(a.GroupExprs))
 
 	for i, e := range a.GroupExprs {
@@ -142,7 +142,7 @@ func (a *Aggregate) Schema() datatypes.Schema {
 	return *datatypes.NewSchema(fields)
 }
 
-func (a *Aggregate) String() string {
+func (a Aggregate) String() string {
 	return fmt.Sprintf("Aggregate: groupExpr=%v, aggregateExprs=%v", a.GroupExprs, a.AggregateExprs)
 }
 

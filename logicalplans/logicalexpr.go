@@ -20,7 +20,11 @@ type Column struct {
 	Name string
 }
 
-func (c *Column) ToField(input LogicalPlan) arrow.Field {
+func NewColumn(name string) Column {
+	return Column{name}
+}
+
+func (c Column) ToField(input LogicalPlan) arrow.Field {
 	schema := input.Schema()
 	for _, f := range schema.Fields() {
 		if f.Name == c.Name {
@@ -31,7 +35,7 @@ func (c *Column) ToField(input LogicalPlan) arrow.Field {
 	panic(fmt.Sprintf("failed to find a column: %s in logicPlan", c.Name))
 }
 
-func (c *Column) String() string {
+func (c Column) String() string {
 	return c.Name
 }
 
@@ -46,14 +50,14 @@ func NewLiteralString(s string) LiteralString {
 	return LiteralString{Str: s}
 }
 
-func (e *LiteralString) ToField(input LogicalPlan) arrow.Field {
+func (e LiteralString) ToField(input LogicalPlan) arrow.Field {
 	return arrow.Field{
 		Name: e.Str,
 		Type: datatypes.StringType,
 	}
 }
 
-func (e *LiteralString) String() string {
+func (e LiteralString) String() string {
 	return fmt.Sprintf("'%s'", e.Str)
 }
 
@@ -65,14 +69,14 @@ func NewLiteralLong(n int64) LiteralLong {
 	return LiteralLong{n}
 }
 
-func (e *LiteralLong) ToField(input LogicalPlan) arrow.Field {
+func (e LiteralLong) ToField(input LogicalPlan) arrow.Field {
 	return arrow.Field{
 		Name: fmt.Sprintf("%d", e.N),
 		Type: datatypes.Int64Type,
 	}
 }
 
-func (e *LiteralLong) String() string {
+func (e LiteralLong) String() string {
 	return fmt.Sprintf("%d", e.N)
 }
 
@@ -84,14 +88,14 @@ func NewLiteralFloat(n float32) LiteralFloat {
 	return LiteralFloat{n}
 }
 
-func (e *LiteralFloat) ToField(input LogicalPlan) arrow.Field {
+func (e LiteralFloat) ToField(input LogicalPlan) arrow.Field {
 	return arrow.Field{
 		Name: fmt.Sprintf("%g", e.N),
 		Type: datatypes.FloatType,
 	}
 }
 
-func (e *LiteralFloat) String() string {
+func (e LiteralFloat) String() string {
 	return fmt.Sprintf("%g", e.N)
 }
 
@@ -104,7 +108,7 @@ type BinaryExpr struct {
 	r    LogicalExpr
 }
 
-func (e *BinaryExpr) String() string {
+func (e BinaryExpr) String() string {
 	return fmt.Sprintf("%s %s %s", e.l, e.op, e.r)
 }
 
@@ -114,7 +118,7 @@ type BooleanBinaryExpr struct {
 
 var _ LogicalExpr = (*BooleanBinaryExpr)(nil)
 
-func (e *BooleanBinaryExpr) ToField(lp LogicalPlan) arrow.Field {
+func (e BooleanBinaryExpr) ToField(lp LogicalPlan) arrow.Field {
 	return arrow.Field{
 		Name: e.name,
 		Type: datatypes.BooleanType,
