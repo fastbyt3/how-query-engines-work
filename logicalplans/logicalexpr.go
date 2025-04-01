@@ -163,7 +163,7 @@ type MathExpr struct {
 	BinaryExpr
 }
 
-func (m *MathExpr) ToField(input LogicalPlan) arrow.Field {
+func (m MathExpr) ToField(input LogicalPlan) arrow.Field {
 	return arrow.Field{
 		Name: m.name,
 		Type: m.l.ToField(input).Type,
@@ -199,14 +199,14 @@ type AggregateExpr struct {
 	expr LogicalExpr
 }
 
-func (a *AggregateExpr) ToField(input LogicalPlan) arrow.Field {
+func (a AggregateExpr) ToField(input LogicalPlan) arrow.Field {
 	return arrow.Field{
 		Name: a.name,
 		Type: a.expr.ToField(input).Type,
 	}
 }
 
-func (a *AggregateExpr) String() string {
+func (a AggregateExpr) String() string {
 	return fmt.Sprintf("%s(%s)", a.name, a.expr)
 }
 
@@ -233,11 +233,11 @@ type AggregateCountExpr struct {
 }
 
 // COUNT expression always returns an int64 datatype field
-func (a *AggregateCountExpr) ToField(_ LogicalPlan) arrow.Field {
+func (a AggregateCountExpr) ToField(_ LogicalPlan) arrow.Field {
 	return arrow.Field{Name: "COUNT", Type: datatypes.Int64Type}
 }
 
-func (a *AggregateCountExpr) String() string {
+func (a AggregateCountExpr) String() string {
 	return fmt.Sprintf("COUNT(%s)", a.expr)
 }
 

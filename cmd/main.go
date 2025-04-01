@@ -9,23 +9,14 @@ import (
 
 func main() {
 	ctx := execution.NewExecutionContext(1024)
-	df := ctx.CSV("test-data/sample.csv")
-	df = df.Filter(
-		logicalplans.NewEqExpr(
-			logicalplans.NewColumn("mpg"),
-			logicalplans.NewLiteralLong(21),
-		),
-	)
-	df = df.Filter(
-		logicalplans.NewEqExpr(
-			logicalplans.NewColumn("cyl"),
-			logicalplans.NewLiteralLong(160),
-		),
-	)
-	df = df.Project([]logicalplans.LogicalExpr{
+	df := ctx.CSV("test-data/employee.csv")
+	df = df.Filter(logicalplans.NewEqExpr(logicalplans.NewColumn("state"), logicalplans.NewLiteralString("CO")))
+	df.Project([]logicalplans.LogicalExpr{
 		logicalplans.NewColumn("id"),
-		logicalplans.NewColumn("model"),
-		logicalplans.NewColumn("mpg"),
+		logicalplans.NewColumn("first_name"),
+		logicalplans.NewColumn("last_name"),
+		logicalplans.NewColumn("state"),
+		logicalplans.NewMult(logicalplans.NewColumn("salary"), logicalplans.NewLiteralFloat(2.0)),
 	})
 
 	fmt.Println(logicalplans.PprintPlan(df.LogicalPlan(), 2))
