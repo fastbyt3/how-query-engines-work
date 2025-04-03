@@ -6,6 +6,7 @@ import (
 	"github.com/fastbyt3/query-engine/datatypes"
 )
 
+// LogicalPlan specifies what to do with data
 type LogicalPlan interface {
 	Schema() datatypes.Schema
 	Children() []LogicalPlan
