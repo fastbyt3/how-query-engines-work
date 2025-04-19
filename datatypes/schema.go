@@ -13,7 +13,7 @@ func NewSchema(fields []arrow.Field) *Schema {
 func (s *Schema) Select(names []string) (Schema, []int) {
 	if len(names) == 0 {
 		indices := make([]int, len(s.Fields()))
-		for i := 0; i < len(s.Fields()); i++ {
+		for i := range s.Fields() {
 			indices[i] = i
 		}
 		return *s, indices
